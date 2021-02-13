@@ -1,0 +1,35 @@
+require [
+    "include",
+	"environment",
+	"variables",
+	"relational",
+	"comparator-i;ascii-numeric",
+	"regex",
+	"imap4flags",
+	"reject",
+	"extlists",
+	"fileinto",
+	"envelope",
+	"vnd.proton.expire"
+];
+
+if anyof(
+  envelope:all:list "from" ":addrbook:personal?label=REJECTS",
+  address:all:list "from" ":addrbook:personal?label=REJECTS"
+) {
+  reject "Sender is forbidden.";
+} elsif allof(
+  header:is "x-autoreply" "yes",
+  header:regex "subject" "^Auto: ",
+  anyof(
+    address:all:list "from" ":addrbook:myself",
+    envelope:all:list "from" ":addrbook:myself"
+  ),
+  anyof(
+    address:all:list "to" ":addrbook:personal?label=REJECTS",
+    envelope:all:list "to" ":addrbook:personal?label=REJECTS"
+  )
+) {
+  expire "day" "1";
+  discard;
+}
